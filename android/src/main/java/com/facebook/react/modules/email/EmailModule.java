@@ -11,6 +11,7 @@ import android.content.pm.LabeledIntent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.widget.Toast;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -19,8 +20,11 @@ import java.util.ArrayList;
 
 public class EmailModule extends ReactContextBaseJavaModule {
 
+  private final ReactApplicationContext reactContext;
+
   public EmailModule(ReactApplicationContext reactContext) {
     super(reactContext);
+    this.reactContext = reactContext;
   }
 
   @Override
@@ -30,37 +34,10 @@ public class EmailModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void open() {
-    // Intent intent = new Intent(Intent.ACTION_MAIN);
-    // intent.addCategory(Intent.CATEGORY_APP_EMAIL);
-    // getCurrentActivity().startActivity(intent);
-    //
 
-    Intent emailIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("mailto:"));
-    PackageManager pm = getCurrentActivity().getPackageManager();
+    Intent intent = new Intent(Intent.ACTION_MAIN);
+    intent.addCategory(Intent.CATEGORY_APP_EMAIL);
+    getCurrentActivity().startActivity(intent);
 
-    List<ResolveInfo> resInfo = pm.queryIntentActivities(emailIntent, 0);
-    if (resInfo.size() > 0) {
-        ResolveInfo ri = resInfo.get(0);
-        // First create an intent with only the package name of the first registered email app
-        // and build a picked based on it
-        Intent intentChooser = pm.getLaunchIntentForPackage(ri.activityInfo.packageName);
-        Intent openInChooser = Intent.createChooser(intentChooser, "Welke app wil je openen?");
-
-        // Then create a list of LabeledIntent for the rest of the registered email apps
-        List<LabeledIntent> intentList = new ArrayList<LabeledIntent>();
-        for (int i = 1; i < resInfo.size(); i++) {
-            // Extract the label and repackage it in a LabeledIntent
-            ri = resInfo.get(i);
-            String packageName = ri.activityInfo.packageName;
-            Intent intent = pm.getLaunchIntentForPackage(packageName);
-            intentList.add(new LabeledIntent(intent, packageName, ri.loadLabel(pm), ri.icon));
-        }
-
-        LabeledIntent[] extraIntents = intentList.toArray(new LabeledIntent[intentList.size()]);
-        // Add the rest of the email apps to the picker selection
-        openInChooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, extraIntents);
-        openInChooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        getCurrentActivity().startActivity(openInChooser);
-      }
   }
 }
