@@ -13,8 +13,6 @@ class EmailException {
   }
 }
 
-const isIOS = Platform.OS === 'ios'
-
 const prefixes = {
   'apple-mail': 'message://',
   'gmail': 'googlegmail://',
@@ -121,24 +119,26 @@ export async function openInbox (options = {}) {
   if (!options || typeof options !== 'object') {
     throw new EmailException('First parameter of `openInbox` should contain object with options.')
   }
+
+  if (Platform.OS === 'android') {
+    // We can't pre-choose, since we use native intents
+    if (!('Email' in NativeModules)) {
+      throw new EmailException('NativeModules.Email does not exist. Check if you installed the Android dependencies correctly.')
+    }
+
+    NativeModules.Email.open()
+    return
+  }
+
   if ('app' in options && options.app && Object.keys(prefixes).indexOf(options.app) < 0) {
     throw new EmailException('Option `app` should be undefined, null, or one of the following: "' + Object.keys(prefixes).join('", "') + '".')
   }
-
-  let { app = null } = options;
-
+  
+  let app = options.app && options.app.length ? options.app : null
   if (!app) {
     const { title, message, cancelLabel } = options;
     app = await askAppChoice(title, message, cancelLabel)
   }
 
-  let url = null
-  switch (app) {
-    default:
-      url = prefixes[app]
-  }
-
-  if (url) {
-    return Linking.openURL(url)
-  }
+  return Linking.openURL(prefixes[app])
 }
