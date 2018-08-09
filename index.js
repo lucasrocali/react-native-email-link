@@ -6,6 +6,8 @@
 
 import { Platform, Alert, ActionSheetIOS, Linking, NativeModules } from 'react-native'
 
+const isIOS = Platform.OS === 'ios'
+
 class EmailException {
     constructor(message) {
         this.message = message
